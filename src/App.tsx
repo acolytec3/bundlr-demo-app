@@ -3,7 +3,7 @@ import "./App.css";
 import { useWeb3React } from "@web3-react/core";
 import { InjectedConnector } from "@web3-react/injected-connector";
 import { WalletConnectConnector } from "@web3-react/walletconnect-connector";
-import { Bundler } from "bundlr-browser-client";
+import { BundlrBrowserClient } from "bundlr-browser-client";
 import { ethers, BigNumber } from "ethers";
 const injected = new InjectedConnector({
   supportedChainIds: [137],
@@ -21,7 +21,7 @@ function App() {
   const [maticBalance, setBalance] = React.useState<BigNumber>();
   const [img, setImg] = React.useState<Buffer>();
   const [price, setPrice] = React.useState<BigNumber>();
-  const [bundler, setBundler] = React.useState<Bundler>();
+  const [bundler, setBundler] = React.useState<BundlrBrowserClient>();
   const connectWeb3 = async (
     connector: InjectedConnector | WalletConnectConnector
   ) => {
@@ -38,7 +38,10 @@ function App() {
   };
 
   const connectBundlr = async () => {
-    const bundlr = new Bundler("https://node1.bundlr.network", web3.library);
+    const bundlr = new BundlrBrowserClient(
+      "https://dev1.bundlr.network",
+      web3.library
+    );
     try {
       await bundlr.connect();
     } catch (err) {
