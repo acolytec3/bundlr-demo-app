@@ -1,12 +1,14 @@
 import React from "react";
-import "./App.css";
 import { useWeb3React } from "@web3-react/core";
 import { InjectedConnector } from "@web3-react/injected-connector";
 import { WalletConnectConnector } from "@web3-react/walletconnect-connector";
 import { BundlrBrowserClient } from "bundlr-browser-client";
 import { ethers, BigNumber } from "ethers";
+import { Button } from "@chakra-ui/button";
+import { Input, HStack, Text, VStack, useToast } from "@chakra-ui/react";
+
 const injected = new InjectedConnector({
-  supportedChainIds: [137],
+  supportedChainIds: [1, 137],
 });
 
 const walletconnect = new WalletConnectConnector({
@@ -22,32 +24,49 @@ function App() {
   const [img, setImg] = React.useState<Buffer>();
   const [price, setPrice] = React.useState<BigNumber>();
   const [bundler, setBundler] = React.useState<BundlrBrowserClient>();
+  const [bundlerHttpAddress, setBundlerAddress] = React.useState<string>();
+  const [fundAmount, setFundingAmount] = React.useState<string>();
+  const toast = useToast();
   const connectWeb3 = async (
     connector: InjectedConnector | WalletConnectConnector
   ) => {
+    if (web3.active) {
+      web3.deactivate();
+      setBalance(undefined);
+      setImg(undefined);
+      setPrice(undefined);
+      setBundler(undefined);
+      return;
+    }
     try {
       await web3.activate(connector);
-      console.log("connected to", web3.chainId);
-      console.log(
-        "current gas token balance",
-        ethers.utils.formatEther(await library.getBalance(web3.account!))
-      );
     } catch (err) {
       console.log(err);
     }
   };
 
   const connectBundlr = async () => {
-    const bundlr = new BundlrBrowserClient(
-      "https://dev1.bundlr.network",
-      web3.library
-    );
+    if (web3.chainId !== 137) {
+      // If not connected to polygon, request network switch
+      await library.send("wallet_switchEthereumChain", [{ chainId: "0x89" }]);
+    }
+    if (!bundlerHttpAddress) return;
+    const bundlr = new BundlrBrowserClient(bundlerHttpAddress, web3.library);
+    try {
+      // Check for valid bundlr node
+      await bundlr.getPrice(1);
+    } catch {
+      console.log("invalid bundlr node");
+      return;
+    }
     try {
       await bundlr.connect();
     } catch (err) {
       console.log(err);
+    } //@ts-ignore
+    if (!bundlr.signer.publicKey) {
+      console.log("something went wrong");
     }
-    console.log(bundlr);
     setBundler(bundlr);
   };
   const handleFileClick = () => {
@@ -85,54 +104,108 @@ function App() {
 
   const uploadFile = async () => {
     if (img) {
-      const res = await bundler!.uploadItem(img);
+      const res = await bundler!.uploadItem(img, [
+        { name: "Content-Type", value: "image/png" },
+      ]);
       console.log(res);
+      toast({
+        status: res.status === 200 ? "success" : "error",
+        title: res.status === 200 ? "Uploaded Successfully" : "Unsuccessful",
+        description: res.data,
+        duration: 5000,
+      });
     }
   };
 
   const fundMatic = async () => {
     if (bundler) {
-      const res = bundler.fundMatic(BigNumber.from(100000));
+      const res = bundler.fundMatic(
+        BigNumber.from(fundAmount)
+          .mul(BigNumber.from(10))
+          .pow(BigNumber.from(18))
+      );
       console.log(res);
     }
   };
+
+  const updateAddress = (evt: React.BaseSyntheticEvent) => {
+    setBundlerAddress(evt.target.value);
+  };
+
+  const updateFundAmount = (evt: React.BaseSyntheticEvent) => {
+    setFundingAmount(evt.target.value);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <button onClick={() => connectWeb3(injected)}>Connect Metamask</button>
-        <button onClick={() => connectWeb3(walletconnect)}>
-          Connect WalletConnect
-        </button>
-        <button onClick={connectBundlr}>Connect to Bundlr Network</button>
-        {bundler && (
-          <>
-            <button
+    <VStack mt={10}>
+      <HStack>
+        {" "}
+        <Button onClick={() => connectWeb3(injected)}>
+          {web3.connector instanceof InjectedConnector && web3.active
+            ? "Disconnect"
+            : "Connect"}{" "}
+          Metamask
+        </Button>
+        <Button onClick={() => connectWeb3(walletconnect)}>
+          {web3.connector instanceof WalletConnectConnector && web3.active
+            ? "Disconnect"
+            : "Connect"}{" "}
+          WalletConnect
+        </Button>
+      </HStack>
+      <Text>Connected Account: {web3.account ?? "None"}</Text>
+      <HStack>
+        <Button w={400} disabled={!web3.active} onClick={connectBundlr}>
+          Connect to Bundlr Network
+        </Button>
+        <Input
+          value={bundlerHttpAddress}
+          onChange={updateAddress}
+          placeholder="Bundler Address"
+        />
+      </HStack>
+      {bundler && (
+        <>
+          <HStack>
+            <Button
               onClick={() => {
                 web3.account &&
                   bundler!
                     .getBundlrBalance(web3.account)
-                    .then((res) => setBalance(res));
+                    .then((res: BigNumber) => setBalance(res));
               }}
             >
               Get Matic Balance
-            </button>
-            <button onClick={fundMatic}>Fund Bundlr</button>
-          </>
-        )}
-        <button onClick={handleFileClick}>Select file from Device</button>
-        {img && (
-          <>
-            <button onClick={handlePrice}>Get Price</button>
-            <button onClick={uploadFile}>Upload to Bundlr Network</button>
-          </>
-        )}
-        <p>Account: {web3.account}</p>
-        {maticBalance && (
-          <p>Matic Balance: {ethers.utils.formatEther(maticBalance)}</p>
-        )}
-        {price && <p>Price to Upload: {ethers.utils.formatEther(price)}</p>}
-      </header>
-    </div>
+            </Button>
+            {maticBalance && (
+              <Text>
+                Matic Balance: {ethers.utils.formatEther(maticBalance)}
+              </Text>
+            )}
+          </HStack>
+          <HStack>
+            <Button onClick={fundMatic}>Fund Bundlr</Button>
+            <Input
+              placeholder="MATIC Amount"
+              value={fundAmount}
+              onChange={updateFundAmount}
+            />
+          </HStack>
+        </>
+      )}
+      <Button onClick={handleFileClick}>Select file from Device</Button>
+      {img && (
+        <>
+          <HStack>
+            <Button onClick={handlePrice}>Get Price</Button>
+            {price && (
+              <Text>MATIC Cost: {ethers.utils.formatEther(price)}</Text>
+            )}
+          </HStack>
+          <Button onClick={uploadFile}>Upload to Bundlr Network</Button>
+        </>
+      )}
+    </VStack>
   );
 }
 
