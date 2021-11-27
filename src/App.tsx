@@ -117,11 +117,9 @@ function App() {
   };
 
   const fundMatic = async () => {
-    if (bundler) {
+    if (bundler && fundAmount) {
       const res = bundler.fundMatic(
-        BigNumber.from(fundAmount)
-          .mul(BigNumber.from(10))
-          .pow(BigNumber.from(18))
+        BigNumber.from(ethers.utils.parseEther(fundAmount))
       );
       console.log(res);
     }
