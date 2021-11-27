@@ -111,6 +111,7 @@ function App() {
       toast({
         status: res.status === 200 ? "success" : "error",
         title: res.status === 200 ? "Successful!" : "Unsuccessful!",
+        description: res.status === 200 ? res.data.id : undefined,
         duration: 5000,
       });
     }
