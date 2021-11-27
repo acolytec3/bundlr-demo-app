@@ -1,7 +1,7 @@
 # Bundlr Network Browser Client Demo
 
 This app demonstrates usage of the [`bundlr-browser-client`](https://github.com/acolytec3/bundlr-browser-client) to upload data
-to the [Bundlr Network](https://bundlr.network) using any `web3provider` exposed by the Ethers library.
+to the [Bundlr Network](https://bundlr.network) using any `web3provider` exposed by the [Ethers library](https://github.com/ethers-io/ethers.js), including Metamask or WalletConnect.
 
 ## Usage
 
@@ -11,3 +11,7 @@ to the [Bundlr Network](https://bundlr.network) using any `web3provider` exposed
 4. Enter an amount (in MATIC) to fund the bundlr with
 5. Select any file from your device to upload to the network
 6. Click "Upload to Bundlr Network" and sign the requested message to initiate an upload.  
+
+## Notes
+
+This app uses [`web3-react`](https://github.com/NoahZinsmeister/web3-react) to connect with Metamask and WalletConnect.  A full explanation of integrating any specific web3 wallet provider can be found there.
