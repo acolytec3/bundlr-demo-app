@@ -110,7 +110,6 @@ function App() {
       console.log(res);
       toast({
         status: res.status === 200 ? "success" : "error",
-        title: res.status === 200 ? "Uploaded Successfully" : "Unsuccessful",
         description: res.data,
         duration: 5000,
       });
