@@ -110,7 +110,7 @@ function App() {
       console.log(res);
       toast({
         status: res.status === 200 ? "success" : "error",
-        title: res.stats === 200 ? "Successful!" : "Unsuccessful!",
+        title: res.status === 200 ? "Successful!" : "Unsuccessful!",
         duration: 5000,
       });
     }
