@@ -26,6 +26,7 @@ function App() {
   const [bundler, setBundler] = React.useState<BundlrBrowserClient>();
   const [bundlerHttpAddress, setBundlerAddress] = React.useState<string>();
   const [fundAmount, setFundingAmount] = React.useState<string>();
+  const [withdrawAmount, setWithdrawAmount] = React.useState<string>();
   const toast = useToast();
   const connectWeb3 = async (
     connector: InjectedConnector | WalletConnectConnector
@@ -126,12 +127,31 @@ function App() {
     }
   };
 
+  const withdrawMatic = async () => {
+    if (bundler && withdrawAmount) {
+      const res = await bundler
+        .withdraw(BigNumber.from(ethers.utils.parseEther(withdrawAmount)))
+        .then((data) => console.log(data))
+        .catch((err: any) => {
+          toast({
+            status: "error",
+            title: "Withdrawal Unsuccessful!",
+            description: err.response.data,
+            duration: 5000,
+          });
+        });
+    }
+  };
   const updateAddress = (evt: React.BaseSyntheticEvent) => {
     setBundlerAddress(evt.target.value);
   };
 
   const updateFundAmount = (evt: React.BaseSyntheticEvent) => {
     setFundingAmount(evt.target.value);
+  };
+
+  const updateWithdrawAmount = (evt: React.BaseSyntheticEvent) => {
+    setWithdrawAmount(evt.target.value);
   };
 
   return (
@@ -187,6 +207,14 @@ function App() {
               placeholder="MATIC Amount"
               value={fundAmount}
               onChange={updateFundAmount}
+            />
+          </HStack>
+          <HStack>
+            <Button onClick={withdrawMatic}>Withdraw Balance</Button>
+            <Input
+              placeholder="MATIC Amount"
+              value={withdrawAmount}
+              onChange={updateWithdrawAmount}
             />
           </HStack>
         </>
