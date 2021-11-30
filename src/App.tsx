@@ -24,7 +24,9 @@ function App() {
   const [img, setImg] = React.useState<Buffer>();
   const [price, setPrice] = React.useState<BigNumber>();
   const [bundler, setBundler] = React.useState<BundlrBrowserClient>();
-  const [bundlerHttpAddress, setBundlerAddress] = React.useState<string>();
+  const [bundlerHttpAddress, setBundlerAddress] = React.useState<string>(
+    "https://node1.bundlr.network"
+  );
   const [fundAmount, setFundingAmount] = React.useState<string>();
   const [withdrawAmount, setWithdrawAmount] = React.useState<string>();
   const toast = useToast();
@@ -209,7 +211,9 @@ function App() {
             )}
           </HStack>
           <HStack>
-            <Button onClick={fundMatic}>Fund Bundlr</Button>
+            <Button w={200} onClick={fundMatic}>
+              Fund Bundlr
+            </Button>
             <Input
               placeholder="MATIC Amount"
               value={fundAmount}
@@ -217,7 +221,9 @@ function App() {
             />
           </HStack>
           <HStack>
-            <Button onClick={withdrawMatic}>Withdraw Balance</Button>
+            <Button w={200} onClick={withdrawMatic}>
+              Withdraw Balance
+            </Button>
             <Input
               placeholder="MATIC Amount"
               value={withdrawAmount}
