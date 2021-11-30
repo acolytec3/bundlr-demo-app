@@ -129,9 +129,16 @@ function App() {
 
   const withdrawMatic = async () => {
     if (bundler && withdrawAmount) {
-      const res = await bundler
+      await bundler
         .withdraw(BigNumber.from(ethers.utils.parseEther(withdrawAmount)))
-        .then((data) => console.log(data))
+        .then((data) => {
+          console.log(data);
+          toast({
+            status: "success",
+            title: "Withdrawal successful",
+            duration: 5000,
+          });
+        })
         .catch((err: any) => {
           toast({
             status: "error",
